@@ -1,0 +1,29 @@
+# Git files
+.git
+.gitignore
+
+# Environment files (will be passed at runtime)
+.env
+
+# Documentation
+*.md
+
+# Debug output files
+*.json
+
+# Ruby cache
+*.gem
+*.rbc
+.bundle
+vendor/bundle
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
