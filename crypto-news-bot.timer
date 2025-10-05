@@ -1,0 +1,28 @@
+# Systemd timer file for Crypto News Bot
+# Runs the bot daily at 9:00 AM
+#
+# Installation instructions:
+# 1. Copy crypto-news-bot.service to /etc/systemd/system/
+# 2. Copy this file to /etc/systemd/system/crypto-news-bot.timer
+# 3. Run: sudo systemctl daemon-reload
+# 4. Run: sudo systemctl enable crypto-news-bot.timer
+# 5. Run: sudo systemctl start crypto-news-bot.timer
+# 6. Check status: sudo systemctl status crypto-news-bot.timer
+# 7. View logs: sudo journalctl -u crypto-news-bot.service
+
+[Unit]
+Description=Crypto News Bot Daily Timer
+Requires=crypto-news-bot.service
+
+[Timer]
+# Run daily at 9:00 AM
+OnCalendar=daily
+# Run at 09:00:00
+OnCalendar=*-*-* 09:00:00
+# If the system was off when the timer was supposed to run, run it as soon as possible
+Persistent=true
+# Randomize the start time by up to 5 minutes to avoid all timers starting at once
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

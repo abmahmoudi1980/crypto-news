@@ -23,6 +23,8 @@ A Ruby-based cryptocurrency news aggregator and analyzer that:
 
 ## Quick Start with Docker
 
+> **For detailed production deployment on Ubuntu Server 24.04, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+
 ### 1. Clone the repository
 
 ```bash
@@ -117,7 +119,35 @@ ruby main.rb
 
 To run the bot on a schedule (e.g., daily), you have several options:
 
-### Option 1: Using cron on host machine
+### Option 1: Using systemd timer (Ubuntu Server - Recommended)
+
+For production deployments on Ubuntu Server 24.04:
+
+```bash
+# Copy service and timer files
+sudo cp crypto-news-bot.service /etc/systemd/system/
+sudo cp crypto-news-bot.timer /etc/systemd/system/
+
+# Edit the service file to set correct paths
+sudo nano /etc/systemd/system/crypto-news-bot.service
+
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Enable and start the timer
+sudo systemctl enable crypto-news-bot.timer
+sudo systemctl start crypto-news-bot.timer
+
+# Check timer status
+sudo systemctl status crypto-news-bot.timer
+
+# View logs
+sudo journalctl -u crypto-news-bot.service -f
+```
+
+The default schedule is daily at 9:00 AM. Edit the timer file to change the schedule.
+
+### Option 2: Using cron on host machine
 
 Add to your crontab:
 
@@ -126,7 +156,7 @@ Add to your crontab:
 0 9 * * * cd /path/to/crypto-news && docker-compose up
 ```
 
-### Option 2: Modify docker-compose.yml
+### Option 3: Modify docker-compose.yml
 
 Uncomment the command line in `docker-compose.yml` to run in a loop:
 
@@ -136,7 +166,7 @@ command: sh -c "while true; do ruby main.rb && sleep 86400; done"
 
 This will run the bot every 24 hours (86400 seconds).
 
-### Option 3: Use an external scheduler
+### Option 4: Use an external scheduler
 
 Use tools like:
 - Kubernetes CronJob
@@ -237,17 +267,19 @@ The Dockerfile includes SSL verification configuration for the gem installation 
 
 ```
 crypto-news/
-├── main.rb              # Main bot orchestration
-├── news_fetcher.rb      # News scraping from sources
-├── ai_analyzer.rb       # OpenRouter API integration
-├── telegram_sender.rb   # Telegram Bot API integration
-├── Gemfile              # Ruby dependencies
-├── Dockerfile           # Docker image definition
-├── docker-compose.yml   # Docker Compose configuration
-├── .dockerignore        # Docker build exclusions
-├── .env.example         # Environment variables template
-├── start.sh             # Quick start script
-└── README.md            # This file
+├── main.rb                    # Main bot orchestration
+├── news_fetcher.rb            # News scraping from sources
+├── ai_analyzer.rb             # OpenRouter API integration
+├── telegram_sender.rb         # Telegram Bot API integration
+├── Gemfile                    # Ruby dependencies
+├── Dockerfile                 # Docker image definition
+├── docker-compose.yml         # Docker Compose configuration
+├── .dockerignore              # Docker build exclusions
+├── .env.example               # Environment variables template
+├── start.sh                   # Quick start script
+├── crypto-news-bot.service    # Systemd service file
+├── crypto-news-bot.timer      # Systemd timer file
+└── README.md                  # This file
 ```
 
 ## Contributing

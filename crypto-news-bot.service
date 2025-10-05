@@ -1,0 +1,35 @@
+# Systemd service file for Crypto News Bot
+# 
+# Installation instructions:
+# 1. Copy this file to /etc/systemd/system/crypto-news-bot.service
+# 2. Update the WorkingDirectory path to your installation directory
+# 3. Update User and Group if needed
+# 4. Run: sudo systemctl daemon-reload
+# 5. Run: sudo systemctl enable crypto-news-bot.service
+# 6. Run: sudo systemctl start crypto-news-bot.service
+#
+# To run on a schedule, create a timer file or use cron
+
+[Unit]
+Description=Crypto News Bot - Docker Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Update this path to your actual installation directory
+WorkingDirectory=/opt/crypto-news
+# Update user if needed
+User=ubuntu
+Group=ubuntu
+# Load environment variables
+EnvironmentFile=/opt/crypto-news/.env
+# Run the bot using docker-compose
+ExecStart=/usr/bin/docker compose up --abort-on-container-exit
+ExecStop=/usr/bin/docker compose down
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
