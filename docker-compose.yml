@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  crypto-news-bot:
+    build: .
+    container_name: crypto-news-bot
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    volumes:
+      # Mount volume for debug output files
+      - ./output:/app/output
+    restart: unless-stopped
+    # Uncomment the following lines to run on a schedule using cron
+    # You can also use this with an external scheduler
+    # command: sh -c "while true; do ruby main.rb && sleep 86400; done"

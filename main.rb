@@ -91,8 +91,12 @@ class CryptoNewsBot
   end
 
   def save_debug_data(filename, data)
-    File.write(filename, JSON.pretty_generate(data))
-    puts "  → Debug data saved to #{filename}"
+    # Create output directory if it doesn't exist
+    output_dir = File.directory?('/app/output') ? '/app/output' : '.'
+    filepath = File.join(output_dir, filename)
+    
+    File.write(filepath, JSON.pretty_generate(data))
+    puts "  → Debug data saved to #{filepath}"
   rescue => e
     puts "  → Could not save debug data: #{e.message}"
   end

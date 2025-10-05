@@ -1,0 +1,31 @@
+# Environment files
+.env
+
+# Ruby cache and gems
+*.gem
+*.rbc
+.bundle
+vendor/bundle
+Gemfile.lock
+
+# Debug output files
+*.json
+output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
