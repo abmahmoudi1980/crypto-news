@@ -50,6 +50,20 @@ TELEGRAM_CHAT_ID=your_telegram_chat_id_here
 
 ### 3. Build and run with Docker
 
+#### Quick Start (recommended):
+
+Use the provided start script:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+The script will:
+- Check if your .env file is configured
+- Verify Docker is running
+- Guide you through building and running the bot
+
 #### Using Docker Compose (recommended):
 
 ```bash
@@ -166,6 +180,11 @@ docker-compose up --build
 docker-compose down -v
 ```
 
+## Technical Notes
+
+### Docker Build Configuration
+The Dockerfile includes SSL verification configuration for the gem installation process. This is necessary for certain build environments and does not affect the security of the running application. The application itself uses proper SSL verification when fetching news and communicating with APIs.
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -227,6 +246,7 @@ crypto-news/
 ├── docker-compose.yml   # Docker Compose configuration
 ├── .dockerignore        # Docker build exclusions
 ├── .env.example         # Environment variables template
+├── start.sh             # Quick start script
 └── README.md            # This file
 ```
 
