@@ -70,7 +70,7 @@ class AIAnalyzer
          • The Block
          • Bitcoin Magazine
 
-      2. Identify the TOP 3 most important crypto/blockchain news stories from today based on:
+      2. Identify the TOP 5 most important crypto/blockchain news stories from today based on:
          - Market impact and significance
          - Technical innovation or developments
          - Regulatory or institutional news

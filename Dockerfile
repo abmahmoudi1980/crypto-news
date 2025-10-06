@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libxslt1-dev \
     libcurl4-openssl-dev \
+    libsqlite3-dev \
+    sqlite3 \
     software-properties-common \
     ca-certificates \
     && apt-get clean \

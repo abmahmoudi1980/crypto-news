@@ -5,6 +5,7 @@ require 'json'
 require_relative 'news_fetcher'
 require_relative 'ai_analyzer'
 require_relative 'telegram_sender'
+require_relative 'database_manager'
 
 class CryptoNewsBot
   def initialize
@@ -21,6 +22,9 @@ class CryptoNewsBot
     puts "=" * 80
     puts
 
+    # Initialize database
+    db = DatabaseManager.new
+    
     # Step 1: Fetch news from all sources
     fetcher = NewsFetcher.new
     news_data = fetcher.fetch_all_news
@@ -37,25 +41,63 @@ class CryptoNewsBot
       puts "Generated #{ai_result[:messages].length} Telegram-ready messages"
       save_debug_data('ai_analysis.json', ai_result)
 
-      # Step 3: Send to Telegram
-      if @telegram_token && @telegram_chat_id
-        sender = TelegramSender.new(@telegram_token, @telegram_chat_id)
-        results = sender.send_messages(ai_result[:messages])
+      # Step 3: Filter out duplicate news using database
+      new_messages = []
+      duplicate_count = 0
+      
+      ai_result[:messages].each do |message|
+        url = message['source_url'] || message[:source_url]
+        title = message['title'] || message[:title]
+        body = message['body'] || message[:body]
         
-        successful = results.count { |r| r[:success] }
-        puts "\n✓ Sent #{successful}/#{results.length} messages to Telegram"
-        save_debug_data('telegram_results.json', results)
-      else
-        puts "\n⚠ Telegram credentials not configured - skipping send"
-        puts "Messages ready to send:"
-        puts JSON.pretty_generate(ai_result[:messages])
+        if url && !db.news_exists?(url)
+          new_messages << message
+          # Add to database
+          db.add_news(
+            title: title,
+            description: body,
+            date: Time.now.to_s,
+            url: url,
+            source: 'ai_analyzed'
+          )
+        else
+          duplicate_count += 1
+          puts "  → Skipping duplicate news: #{title[0..50]}..."
+        end
       end
 
-      # Output final JSON
+      puts "\n✓ Filtered results: #{new_messages.length} new, #{duplicate_count} duplicates"
+
+      # Step 4: Send only new messages to Telegram
+      if new_messages.any?
+        if @telegram_token && @telegram_chat_id
+          sender = TelegramSender.new(@telegram_token, @telegram_chat_id)
+          results = sender.send_messages(new_messages)
+          
+          successful = results.count { |r| r[:success] }
+          puts "\n✓ Sent #{successful}/#{new_messages.length} new messages to Telegram"
+          save_debug_data('telegram_results.json', results)
+        else
+          puts "\n⚠ Telegram credentials not configured - skipping send"
+          puts "New messages ready to send:"
+          puts JSON.pretty_generate(new_messages)
+        end
+
+        # Output final JSON
+        puts "\n" + "=" * 80
+        puts "FINAL OUTPUT - New Telegram Messages (#{new_messages.length}):"
+        puts "=" * 80
+        puts JSON.pretty_generate(new_messages)
+      else
+        puts "\n⚠ No new messages to send - all news items were duplicates"
+      end
+      
+      # Show database stats
+      stats = db.get_stats
       puts "\n" + "=" * 80
-      puts "FINAL OUTPUT - Telegram-Ready Messages:"
+      puts "Database Statistics:"
+      puts "  Total news stored: #{stats[:total_news]}"
       puts "=" * 80
-      puts JSON.pretty_generate(ai_result[:messages])
       
     else
       puts "\n✗ AI Analysis failed"
@@ -65,6 +107,8 @@ class CryptoNewsBot
       save_debug_data('ai_error.json', ai_result)
     end
 
+    db.close
+    
     puts "\n" + "=" * 80
     puts "Bot execution completed at #{Time.now}"
     puts "=" * 80

@@ -1,6 +1,12 @@
 # Environment files
 .env
 
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
 # Ruby cache and gems
 *.gem
 *.rbc
