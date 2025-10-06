@@ -77,7 +77,7 @@ class AIAnalyzer
          - Major protocol updates or security issues
          - Trading volume or price action triggers
 
-      3. For each of the top 3 stories, provide:
+      3. For each of the top 5 stories, provide:
          a. A concise English summary (2-3 sentences)
          b. Expert analysis covering:
             - Why this matters to the crypto ecosystem
