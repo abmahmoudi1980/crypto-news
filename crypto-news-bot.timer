@@ -1,5 +1,5 @@
 # Systemd timer file for Crypto News Bot
-# Runs the bot every hour
+# Runs the bot every 5 minutes
 #
 # Installation instructions:
 # 1. Copy crypto-news-bot.service to /etc/systemd/system/
@@ -23,18 +23,21 @@
 # - ./analyze_logs.sh  - Analyze timer execution history
 
 [Unit]
-Description=Crypto News Bot Hourly Timer
+Description=Crypto News Bot Timer (Every 5 Minutes)
 Requires=crypto-news-bot.service
 
 [Timer]
-# Run every hour on the hour (00:00, 01:00, 02:00, etc.)
-OnCalendar=hourly
-# Alternative: Run every hour at a specific minute (e.g., at :15 past each hour)
-# OnCalendar=*-*-* *:15:00
+# Run every 5 minutes
+OnCalendar=*:0/5
+# Alternative schedules:
+# OnCalendar=hourly              # Every hour on the hour
+# OnCalendar=*:0/10              # Every 10 minutes
+# OnCalendar=*:0/15              # Every 15 minutes
+# OnCalendar=*-*-* *:15:00       # Every hour at :15 past
 # If the system was off when the timer was supposed to run, run it as soon as possible
 Persistent=true
-# Small randomization to avoid exact simultaneous starts
-RandomizedDelaySec=60
+# Small randomization to avoid exact simultaneous starts (in seconds)
+RandomizedDelaySec=30
 
 [Install]
 WantedBy=timers.target
