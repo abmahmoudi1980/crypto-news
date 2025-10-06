@@ -8,8 +8,19 @@
 # 4. Run: sudo systemctl enable crypto-news-bot.timer
 # 5. Run: sudo systemctl start crypto-news-bot.timer
 # 6. Check status: sudo systemctl status crypto-news-bot.timer
-# 7. View logs: sudo journalctl -u crypto-news-bot.service
-# 8. List next scheduled runs: systemctl list-timers crypto-news-bot.timer
+# 7. List next scheduled runs: systemctl list-timers crypto-news-bot.timer
+#
+# Viewing logs (all timer runs are automatically logged):
+# - View recent logs: sudo journalctl -u crypto-news-bot.service -n 50
+# - Follow logs: sudo journalctl -u crypto-news-bot.service -f
+# - Today's logs: sudo journalctl -u crypto-news-bot.service --since today
+# - Last hour: sudo journalctl -u crypto-news-bot.service --since "1 hour ago"
+# - Errors only: sudo journalctl -u crypto-news-bot.service -p err
+# - Export logs: sudo journalctl -u crypto-news-bot.service > logs.txt
+#
+# Helper scripts:
+# - ./view_logs.sh     - View logs dashboard
+# - ./analyze_logs.sh  - Analyze timer execution history
 
 [Unit]
 Description=Crypto News Bot Hourly Timer

@@ -27,6 +27,12 @@ EnvironmentFile=/opt/crypto-news/.env
 # Run the bot using docker-compose
 ExecStart=/usr/bin/docker compose up --abort-on-container-exit
 ExecStop=/usr/bin/docker compose down
+
+# Logging configuration
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=crypto-news-bot
+
 # Restart policy
 Restart=on-failure
 RestartSec=10s
