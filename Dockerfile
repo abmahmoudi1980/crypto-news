@@ -34,8 +34,8 @@ RUN apt-get update && apt-get install -y \
 # Create app directory
 WORKDIR /app
 
-# Copy Gemfile and install dependencies
-COPY Gemfile ./
+# Copy Gemfile and Gemfile.lock (if exists) and install dependencies
+COPY Gemfile* ./
 # Configure both bundler and gem to handle SSL issues in build environment
 RUN echo ":ssl_verify_mode: 0" >> /root/.gemrc && \
     bundle config set ssl_verify_mode 0 && \
@@ -48,5 +48,5 @@ COPY . .
 # Make main.rb executable
 RUN chmod +x main.rb
 
-# Set the entry point
-CMD ["ruby", "main.rb"]
+# Set the entry point - use bundle exec to ensure gems are loaded
+CMD ["bundle", "exec", "ruby", "main.rb"]
