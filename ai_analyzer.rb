@@ -70,14 +70,14 @@ class AIAnalyzer
          • The Block
          • Bitcoin Magazine
 
-      2. Identify the TOP 5 most important crypto/blockchain news stories from today based on:
+      2. Identify the TOP 10 most important crypto/blockchain news stories from today based on:
          - Market impact and significance
          - Technical innovation or developments
          - Regulatory or institutional news
          - Major protocol updates or security issues
          - Trading volume or price action triggers
 
-      3. For each of the top 5 stories, provide:
+      3. For each of the top 10 stories, provide:
          a. A concise English summary (2-3 sentences)
          b. Expert analysis covering:
             - Why this matters to the crypto ecosystem
@@ -87,7 +87,7 @@ class AIAnalyzer
 
       4. Translate the COMPLETE summary + analysis for each story into fluent, natural Persian (Farsi).
 
-      5. Output ONLY a valid JSON array with exactly 3 objects, each with these fields:
+      5. Output ONLY a valid JSON array with exactly 10 objects, each with these fields:
          • title: (Persian headline - clear and engaging)
          • body: (Persian text containing both summary and analysis)
          • source_url: (original article URL from the source)
