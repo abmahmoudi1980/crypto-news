@@ -20,7 +20,7 @@ class AIAnalyzer
     prompt = build_analysis_prompt(news_data)
     
     request_body = {
-      model: 'anthropic/claude-3.5-sonnet', # You can change to other models
+      model: 'z-ai/glm-4.6', # You can change to other models
       messages: [
         {
           role: 'user',
