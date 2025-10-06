@@ -20,7 +20,7 @@ class AIAnalyzer
     prompt = build_analysis_prompt(news_data)
     
     request_body = {
-      model: 'deepseek/deepseek-v3.2-exp', # You can change to other models
+      model: 'deepseek/deepseek-chat-v3.1:free', # You can change to other models
       messages: [
         {
           role: 'user',
