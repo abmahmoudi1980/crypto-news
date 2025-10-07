@@ -75,6 +75,9 @@ class NewsFetcher
     # Special handling for CoinDesk - extract from meta tags
     if source_domain.include?('coindesk')
       headlines = extract_coindesk_articles(doc, url)
+    # Special handling for Cointelegraph - extract from link tags
+    elsif source_domain.include?('cointelegraph')
+      headlines = extract_cointelegraph_articles(doc, url)
     end
     
     # If no headlines from special extraction or other sites, use generic method
@@ -136,6 +139,77 @@ class NewsFetcher
       end
       
       break if articles.length >= 15
+    end
+    
+    articles
+  end
+
+  def extract_cointelegraph_articles(doc, base_url)
+    articles = []
+    
+    # Method 1: Extract from link alternate tags (most reliable for Cointelegraph)
+    doc.css('link[rel="alternate"][hreflang="en"]').each do |link|
+      article_url = link['href']
+      next unless article_url
+      next unless article_url.include?('cointelegraph.com/news') || 
+                  article_url.include?('cointelegraph.com/magazine') ||
+                  article_url.include?('cointelegraph.com/press-releases')
+      
+      # Find associated title - look in nearby meta tags or headings
+      title = nil
+      
+      # Try og:title meta tag
+      og_title = doc.at_css('meta[property="og:title"]')
+      title = og_title['content'] if og_title
+      
+      # Try to find title in the document structure
+      unless title && title.length > 20
+        # Look for the heading near this link element
+        parent = link.parent
+        if parent
+          title_elem = parent.at_css('h1, h2, h3, .title, [class*="headline"]')
+          title = title_elem&.text&.strip if title_elem
+        end
+      end
+      
+      # If still no title, extract from URL
+      unless title && title.length > 20
+        title = article_url.split('/')[-1]&.gsub('-', ' ')&.capitalize
+      end
+      
+      next if title.to_s.length < 10
+      
+      articles << {
+        title: title[0..300],
+        url: article_url
+      }
+      
+      break if articles.length >= 15
+    end
+    
+    # Method 2: Look for article elements with links
+    if articles.length < 10
+      doc.css('article, [class*="post"], [class*="article"]').each do |article|
+        title_elem = article.at_css('h1, h2, h3, h4, [class*="title"], [class*="headline"]')
+        link_elem = article.at_css('a[href*="/news/"], a[href*="/magazine/"]')
+        
+        if title_elem && link_elem
+          title = title_elem.text.strip
+          link = link_elem['href']
+          
+          next if title.empty? || title.length < 20
+          next unless link
+          
+          full_url = link.start_with?('http') ? link : normalize_url(link, base_url)
+          
+          articles << {
+            title: title[0..300],
+            url: full_url
+          }
+        end
+        
+        break if articles.length >= 15
+      end
     end
     
     articles
