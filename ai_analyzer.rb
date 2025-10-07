@@ -90,16 +90,31 @@ class AIAnalyzer
       5. Output ONLY a valid JSON array with exactly 10 objects, each with these fields:
          • title: (Persian headline - clear and engaging)
          • body: (Persian text containing both summary and analysis)
-         • source_url: (original article URL from the source)
+         • source_url: (MUST be the EXACT URL from the headlines below - copy it exactly as provided)
+
+      EXAMPLE of correct source_url usage:
+      If you see in the data:
+        TITLE: Bitcoin Reaches New All-Time High
+        FULL_URL: https://www.coindesk.com/markets/2024/10/07/bitcoin-reaches-new-all-time-high-123456
+      
+      Then your JSON MUST include:
+        "source_url": "https://www.coindesk.com/markets/2024/10/07/bitcoin-reaches-new-all-time-high-123456"
+      
+      DO NOT use:
+        "source_url": "https://www.coindesk.com" ❌ (this is wrong - too generic)
+        "source_url": "https://coindesk.com/bitcoin-news" ❌ (this is wrong - made up)
 
       NEWS DATA:
       #{news_summary}
 
-      IMPORTANT: 
-      - Output ONLY the JSON array, no extra text
+      CRITICAL INSTRUCTIONS: 
+      - Output ONLY the JSON array, no extra text or markdown
       - Ensure valid JSON syntax
       - Persian text must be natural and professional
-      - Include actual URLs from the sources provided
+      - For source_url: Copy the EXACT "FULL_URL:" value from the articles above
+      - DO NOT create, modify, or shorten URLs
+      - DO NOT use base site URLs
+      - Match each story to its original article URL from the data
       - Focus on the most impactful stories
 
       JSON OUTPUT:
@@ -113,22 +128,24 @@ class AIAnalyzer
       next if data[:error]
       
       formatted << "=== #{source.to_s.upcase.gsub('_', ' ')} ==="
-      formatted << "URL: #{data[:url]}"
+      formatted << "Base Site: #{data[:url]}"
       
       if data[:content] && data[:content][:headlines]
-        formatted << "\nHeadlines:"
+        formatted << "\n📰 ARTICLES (#{data[:content][:headlines].length} found):"
         data[:content][:headlines].each_with_index do |headline, idx|
-          formatted << "#{idx + 1}. #{headline[:title]}"
-          formatted << "   URL: #{headline[:url]}" if headline[:url]
+          formatted << "\n[Article #{idx + 1}]"
+          formatted << "TITLE: #{headline[:title]}"
+          formatted << "FULL_URL: #{headline[:url]}"
+          formatted << ""
         end
       end
       
       if data[:content] && data[:content][:text_content]
-        formatted << "\nContent Preview:"
-        formatted << data[:content][:text_content][0..2000]
+        formatted << "\nAdditional Context:"
+        formatted << data[:content][:text_content][0..1500]
       end
       
-      formatted << "\n" + ("-" * 80) + "\n"
+      formatted << "\n" + ("=" * 80) + "\n"
     end
     
     formatted.join("\n")

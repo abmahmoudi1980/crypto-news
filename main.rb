@@ -41,14 +41,44 @@ class CryptoNewsBot
       puts "Generated #{ai_result[:messages].length} Telegram-ready messages"
       save_debug_data('ai_analysis.json', ai_result)
 
+      # Validate and collect all fetched URLs for reference
+      all_fetched_urls = []
+      news_data.each do |source, data|
+        next if data[:error] || !data[:content] || !data[:content][:headlines]
+        data[:content][:headlines].each do |headline|
+          all_fetched_urls << headline[:url] if headline[:url]
+        end
+      end
+      puts "  → Fetched #{all_fetched_urls.length} article URLs for validation"
+
       # Step 3: Filter out duplicate news using database
       new_messages = []
       duplicate_count = 0
+      invalid_url_count = 0
       
       ai_result[:messages].each do |message|
         url = message['source_url'] || message[:source_url]
         title = message['title'] || message[:title]
         body = message['body'] || message[:body]
+        
+        # Validate URL
+        if url.nil? || url.empty? || !url.start_with?('http')
+          puts "  ⚠ Invalid URL for: #{title[0..50]}..."
+          puts "     URL: #{url.inspect}"
+          invalid_url_count += 1
+          
+          # Try to find a matching URL from fetched data
+          matching_url = find_matching_url(title, all_fetched_urls)
+          if matching_url
+            puts "     → Found matching URL: #{matching_url[0..60]}..."
+            url = matching_url
+            message['source_url'] = url
+            message[:source_url] = url
+          else
+            puts "     → No matching URL found, skipping this article"
+            next
+          end
+        end
         
         if url && !db.news_exists?(url)
           new_messages << message
@@ -67,6 +97,7 @@ class CryptoNewsBot
       end
 
       puts "\n✓ Filtered results: #{new_messages.length} new, #{duplicate_count} duplicates"
+      puts "  → Invalid/corrected URLs: #{invalid_url_count}" if invalid_url_count > 0
 
       # Step 4: Send only new messages to Telegram
       if new_messages.any?
@@ -115,6 +146,29 @@ class CryptoNewsBot
   end
 
   private
+
+  def find_matching_url(title, fetched_urls)
+    return nil if title.nil? || title.empty?
+    
+    # Clean and normalize the title for matching
+    clean_title = title.downcase.strip
+    
+    # Try to find a URL that might match this title
+    # Look for URLs that contain key words from the title
+    title_words = clean_title.split(/\s+/).reject { |w| w.length < 4 }
+    
+    return nil if title_words.empty?
+    
+    # Score each URL based on how many title words appear in it
+    scored_urls = fetched_urls.map do |url|
+      score = title_words.count { |word| url.downcase.include?(word) }
+      { url: url, score: score }
+    end
+    
+    # Return the best match if score is decent
+    best_match = scored_urls.max_by { |item| item[:score] }
+    best_match && best_match[:score] >= 2 ? best_match[:url] : nil
+  end
 
   def validate_environment
     errors = []
