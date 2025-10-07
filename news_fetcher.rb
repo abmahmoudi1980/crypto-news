@@ -69,34 +69,119 @@ class NewsFetcher
 
   def extract_headlines(doc, url)
     headlines = []
+    base_uri = URI.parse(url)
+    source_domain = base_uri.host
+    
+    # Special handling for CoinDesk - extract from meta tags
+    if source_domain.include?('coindesk')
+      headlines = extract_coindesk_articles(doc, url)
+    end
+    
+    # If no headlines from special extraction or other sites, use generic method
+    if headlines.empty?
+      headlines = extract_generic_headlines(doc, url)
+    end
+    
+    headlines.uniq { |h| h[:url] }.take(15)
+  end
+
+  def extract_coindesk_articles(doc, base_url)
+    articles = []
+    
+    # Method 1: Extract from meta tags (most reliable for CoinDesk)
+    doc.css('meta[name="page_url"]').each do |meta|
+      page_url = meta['content']
+      next unless page_url
+      
+      # Find associated title
+      article_element = meta.parent
+      title = nil
+      
+      # Try to find title in nearby elements
+      if article_element
+        title_element = article_element.at_css('h1, h2, h3, h4, .title, [class*="headline"]')
+        title = title_element&.text&.strip if title_element
+      end
+      
+      # If no title found, use the URL to extract it
+      unless title && title.length > 20
+        title = page_url.split('/')[-1]&.gsub('-', ' ')&.capitalize
+      end
+      
+      next if title.to_s.length < 10
+      
+      full_url = normalize_url(page_url, base_url)
+      
+      articles << {
+        title: title[0..300],
+        url: full_url
+      }
+    end
+    
+    # Method 2: Look for article cards with data attributes
+    doc.css('article, [class*="article"], [class*="card"]').each do |article|
+      title_elem = article.at_css('h1, h2, h3, h4, [class*="title"], [class*="headline"]')
+      link_elem = article.at_css('a[href*="/markets/"], a[href*="/business/"], a[href*="/tech/"], a[href*="/policy/"]')
+      
+      if title_elem && link_elem
+        title = title_elem.text.strip
+        link = link_elem['href']
+        
+        next if title.empty? || title.length < 20
+        
+        articles << {
+          title: title[0..300],
+          url: normalize_url(link, base_url)
+        }
+      end
+      
+      break if articles.length >= 15
+    end
+    
+    articles
+  end
+
+  def extract_generic_headlines(doc, url)
+    headlines = []
     
     # Common selectors for news headlines
     selectors = [
-      'article h2', 'article h3', 'article h4',
-      '.headline', '.article-title', '.post-title',
-      'h1 a', 'h2 a', 'h3 a',
-      '[class*="headline"]', '[class*="title"]'
+      'article h2 a', 'article h3 a', 'article h4 a',
+      '.headline a', '.article-title a', '.post-title a',
+      'h2 a', 'h3 a',
+      '[class*="headline"] a', '[class*="title"] a',
+      'article a'
     ]
     
     selectors.each do |selector|
       doc.css(selector).each do |element|
-        text = element.text.strip
-        next if text.empty? || text.length < 20
+        link = element['href']
+        next unless link
         
-        link = element.css('a').first&.attr('href') || element.attr('href')
-        link = normalize_url(link, url) if link
+        # Get text from the link or parent element
+        text = element.text.strip
+        if text.empty? || text.length < 20
+          text = element.parent&.text&.strip
+        end
+        
+        next if text.to_s.empty? || text.length < 20
+        
+        # Skip navigation/footer links
+        next if link.match?(/^\/(about|contact|privacy|terms|category|tag|author)/)
+        
+        full_url = normalize_url(link, url)
         
         headlines << {
           title: text[0..300],
-          url: link
+          url: full_url
         }
         
-        break if headlines.length >= 15
+        break if headlines.length >= 20
       end
-      break if headlines.length >= 10
+      break if headlines.length >= 15
     end
     
-    headlines.uniq { |h| h[:title] }
+    headlines
   end
 
   def normalize_url(link, base_url)
